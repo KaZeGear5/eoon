@@ -51,5 +51,23 @@
 	<string>EooN nécessite votre position GPS pour afficher la carte et vous guider en direct.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>EooN utilise votre position GPS pour mettre à jour la navigation et les alertes de trafic en arrière-plan.</string>
+<!-- Support Apple CarPlay -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>CPTemplateApplicationSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>CarPlay</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).CarPlaySceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 </dict>
 </plist>
