@@ -1,0 +1,5 @@
+<!-- Textes explicatifs obligatoires pour demander l'accès au GPS sur iOS -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>EooN nécessite votre position GPS pour afficher la carte et vous guider en direct.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>EooN utilise votre position GPS pour mettre à jour la navigation et les alertes de trafic en arrière-plan.</string>
