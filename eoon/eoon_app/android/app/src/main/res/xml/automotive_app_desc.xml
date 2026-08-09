@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<automotiveApp>
+    <!-- Déclare EooN comme une application de navigation -->
+    <uses name="navigation" />
+</automotiveApp>
