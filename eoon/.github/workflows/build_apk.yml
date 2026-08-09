@@ -1,0 +1,42 @@
+name: Build EooN Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration de Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Configuration de Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      - name: Installation des dépendances
+        run: |
+          cd eoon_app
+          flutter pub get
+
+      - name: Build de l'APK Release
+        run: |
+          cd eoon_app
+          flutter build apk --split-per-abi --no-pub
+
+      - name: Exportation de l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: eoon-android-apk
+          path: eoon_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
