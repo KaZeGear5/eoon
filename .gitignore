@@ -6,11 +6,15 @@ eoon_app/build/
 eoon_app/.flutter-plugins
 eoon_app/.flutter-plugin-dependencies
 
-# Android / iOS built files
+# Android
 eoon_app/android/.gradle/
 eoon_app/android/app/build/
+eoon_app/android/local.properties
+
+# iOS
 eoon_app/ios/Pods/
 eoon_app/ios/Runner.xcworkspace
+eoon_app/ios/Flutter/Flutter.podspec
 
 # System
 .DS_Store
