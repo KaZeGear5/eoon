@@ -13,8 +13,9 @@ dependencies:
   geolocator: ^10.1.0
   permission_handler: ^11.0.1
   http: ^1.2.0
-  web_socket_channel: ^3.0.0 # <--- Ajout pour le temps réel WebSocket
-
+  web_socket_channel: ^3.0.0
+  android_auto: ^0.0.1 # <--- Support Android Auto
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
