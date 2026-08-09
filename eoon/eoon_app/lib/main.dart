@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'services/routing_service.dart';
+import 'models/alert.dart';
+import 'widgets/alert_dialog.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +19,7 @@ class EoonApp extends StatelessWidget {
       title: 'EooN',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F172A), // Style Sombre
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
       ),
       home: const MapScreen(),
     );
@@ -36,6 +38,7 @@ class _MapScreenState extends State<MapScreen> {
   Position? _currentPosition;
   bool _isLoading = true;
   RouteInfo? _currentRoute;
+  final List<RoadAlert> _alerts = [];
 
   @override
   void initState() {
@@ -43,7 +46,6 @@ class _MapScreenState extends State<MapScreen> {
     _initLocation();
   }
 
-  /// Gestion des permissions et suivi GPS
   Future<void> _initLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -61,11 +63,10 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      _showMessage('Permission GPS bloquée. Activez-la dans les réglages du téléphone.');
+      _showMessage('Permission GPS bloquée dans les réglages.');
       return;
     }
 
-    // Premier relevé GPS
     Position pos = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
@@ -75,7 +76,6 @@ class _MapScreenState extends State<MapScreen> {
       _isLoading = false;
     });
 
-    // Écoute de la position en temps réel pendant le déplacement
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
@@ -88,7 +88,6 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  /// Calcul et tracé d'un itinéraire au clic sur la carte
   Future<void> _drawRouteTo(LatLng destination) async {
     if (_currentPosition == null || _mapController == null) return;
 
@@ -100,10 +99,7 @@ class _MapScreenState extends State<MapScreen> {
         _currentRoute = route;
       });
 
-      // Nettoie la carte avant d'afficher la nouvelle ligne
       await _mapController!.clearLines();
-
-      // Dessine la ligne d'itinéraire en Cyan Néon (Signature EooN)
       await _mapController!.addLine(
         LineOptions(
           geometry: route.points,
@@ -113,6 +109,61 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
     }
+  }
+
+  /// Ajouter une alerte sur la carte à la position actuelle du conducteur
+  void _reportAlert(AlertType type) async {
+    if (_currentPosition == null || _mapController == null) return;
+
+    LatLng currentLatLng = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+
+    RoadAlert newAlert = RoadAlert(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      type: type,
+      position: currentLatLng,
+      timestamp: DateTime.now(),
+    );
+
+    setState(() {
+      _alerts.add(newAlert);
+    });
+
+    // Ajoute un cercle de signalement sur la carte
+    await _mapController!.addCircle(
+      CircleOptions(
+        geometry: currentLatLng,
+        circleColor: _getAlertColorHex(type),
+        circleRadius: 10.0,
+        circleOpacity: 0.8,
+        circleStrokeWidth: 2,
+        circleStrokeColor: "#FFFFFF",
+      ),
+    );
+
+    _showMessage('Alerte "${newAlert.title}" signalée à la communauté !');
+  }
+
+  String _getAlertColorHex(AlertType type) {
+    switch (type) {
+      case AlertType.police:
+        return "#3B82F6";
+      case AlertType.accident:
+        return "#EF4444";
+      case AlertType.hazard:
+        return "#F59E0B";
+      case AlertType.traffic:
+        return "#8B5CF6";
+    }
+  }
+
+  void _openReportMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AlertReportSheet(
+        onAlertSelected: _reportAlert,
+      ),
+    );
   }
 
   void _recenterMap() {
@@ -128,7 +179,13 @@ class _MapScreenState extends State<MapScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF1E293B),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -142,10 +199,7 @@ class _MapScreenState extends State<MapScreen> {
                 )
               : MapLibreMap(
                   onMapCreated: (controller) => _mapController = controller,
-                  onMapClick: (point, latLng) {
-                    // Clic sur la carte = Définir comme destination
-                    _drawRouteTo(latLng);
-                  },
+                  onMapClick: (point, latLng) => _drawRouteTo(latLng),
                   initialCameraPosition: CameraPosition(
                     target: LatLng(
                       _currentPosition?.latitude ?? 48.8566,
@@ -161,7 +215,7 @@ class _MapScreenState extends State<MapScreen> {
           // Panneau récapitulatif d'itinéraire
           if (_currentRoute != null)
             Positioned(
-              bottom: 100,
+              bottom: 110,
               left: 20,
               right: 20,
               child: Card(
@@ -194,9 +248,7 @@ class _MapScreenState extends State<MapScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF06B6D4),
                         ),
-                        onPressed: () {
-                          _showMessage('Lancement du guidage vocal...');
-                        },
+                        onPressed: () => _showMessage('Guidage activé !'),
                         child: const Text('Démarrer', style: TextStyle(color: Colors.white)),
                       ),
                     ],
@@ -205,11 +257,25 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-          // Bouton pour recentrer sur sa position
+          // Bouton "Signaler" style Waze (Orange/Jaune d'alerte)
+          Positioned(
+            bottom: 30,
+            left: 20,
+            child: FloatingActionButton.extended(
+              heroTag: 'report_btn',
+              backgroundColor: const Color(0xFFF59E0B),
+              onPressed: _openReportMenu,
+              icon: const Icon(Icons.warning_amber_rounded, color: Colors.white),
+              label: const Text('Signaler', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ),
+
+          // Bouton pour recentrer GPS
           Positioned(
             bottom: 30,
             right: 20,
             child: FloatingActionButton(
+              heroTag: 'recenter_btn',
               backgroundColor: const Color(0xFF06B6D4),
               onPressed: _recenterMap,
               child: const Icon(Icons.my_location, color: Colors.white),
