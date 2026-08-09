@@ -1,0 +1,17 @@
+# Flutter / Dart
+eoon_app/.dart_tool/
+eoon_app/.build/
+eoon_app/.pub/
+eoon_app/build/
+eoon_app/.flutter-plugins
+eoon_app/.flutter-plugin-dependencies
+
+# Android / iOS built files
+eoon_app/android/.gradle/
+eoon_app/android/app/build/
+eoon_app/ios/Pods/
+eoon_app/ios/Runner.xcworkspace
+
+# System
+.DS_Store
+*.log
